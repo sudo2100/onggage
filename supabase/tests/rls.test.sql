@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(34);
+select plan(39);
 
 -- 사용자 두 명 (트리거가 profiles를 만든다)
 insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
@@ -241,6 +241,46 @@ select lives_ok(
      values ('site-assets', 'aaaaaaaa-0000-0000-0000-000000000001/logo.png',
              '11111111-1111-1111-1111-111111111111') $$,
   'A는 자기 사이트 폴더에 파일을 올릴 수 있다'
+);
+
+-- business(가게 정보): 기존 draft 정책이 그대로 적용된다
+select lives_ok(
+  $$ update public.site_versions set business = '{"phone":"031-905-1234","hours":"매일 11:00–21:00"}'
+     where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'draft' $$,
+  'A는 draft의 가게 정보를 수정할 수 있다'
+);
+
+select is(
+  (select business ->> 'phone' from public.site_versions
+   where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'draft'),
+  '031-905-1234',
+  'draft의 가게 정보가 저장된다'
+);
+
+update public.site_versions set business = '{"phone":"010-0000-0000"}'
+where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'published';
+select is(
+  (select business from public.site_versions
+   where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'published'),
+  '{}'::jsonb,
+  'A는 published의 가게 정보를 직접 수정할 수 없다'
+);
+
+select throws_ok(
+  $$ update public.site_versions set business = '[]'
+     where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'draft' $$,
+  '23514', null, '가게 정보는 JSON 객체여야 한다'
+);
+
+-- 익명은 공개본의 가게 정보를 읽는다
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select is(
+  (select business from public.site_versions
+   where site_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
+  '{}'::jsonb,
+  '익명은 공개본의 가게 정보만 읽는다 (초안 값은 보이지 않는다)'
 );
 
 select * from finish();
