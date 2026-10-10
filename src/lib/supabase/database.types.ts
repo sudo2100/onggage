@@ -61,14 +61,14 @@ isOneToOne: false
                   ]
                 },"site_versions": {
                   Row: {
-                    "created_at": string,"id": string,"kind": Database["public"]['Enums']["version_kind"],"sections": NonNullable<Json>,"site_id": string,"theme": NonNullable<Json>,"updated_at": string
+                    "business": NonNullable<Json>,"created_at": string,"id": string,"kind": Database["public"]['Enums']["version_kind"],"sections": NonNullable<Json>,"site_id": string,"theme": NonNullable<Json>,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["version_kind"],"sections"?: NonNullable<Json>,"site_id": string,"theme"?: NonNullable<Json>,"updated_at"?: string
+                    "business"?: NonNullable<Json>,"created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["version_kind"],"sections"?: NonNullable<Json>,"site_id": string,"theme"?: NonNullable<Json>,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["version_kind"],"sections"?: NonNullable<Json>,"site_id"?: string,"theme"?: NonNullable<Json>,"updated_at"?: string
+                    "business"?: NonNullable<Json>,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["version_kind"],"sections"?: NonNullable<Json>,"site_id"?: string,"theme"?: NonNullable<Json>,"updated_at"?: string
                   }
                   Relationships: [
                     {
