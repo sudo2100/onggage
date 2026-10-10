@@ -132,17 +132,39 @@ export const themeSchema = z.object({
 
 // ─────────────────────────────────────────────
 // 가게 정보 — 영업 안내·문의 섹션과 하단 버튼이 함께 읽는다. 모두 선택 입력.
+// 빈 문자열(공백만 있는 값 포함)은 입력 안 함으로 보고 undefined로 저장한다.
 // ─────────────────────────────────────────────
-export const businessSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9][0-9-]{6,14}[0-9]$/, "전화번호는 숫자와 하이픈만 쓸 수 있습니다")
-    .optional(),
-  address: optionalText(200).optional(),
-  hours: optionalText(100).optional(),
-  kakao: optionalText(50).optional(),
+const blankToUndefined = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+
+// 앞뒤 공백은 지우고, 가운데 공백은 하이픈으로 바꾼다. "010 1234 5678" → "010-1234-5678"
+const normalizePhone = (value: unknown) => {
+  const blank = blankToUndefined(value);
+  if (typeof blank !== "string") return blank;
+  return blank.trim().replace(/\s*-\s*|\s+/g, "-");
+};
+
+const optionalBusinessText = (max: number) => z.preprocess(blankToUndefined, requiredText(max).optional());
+
+// 필드별 스키마 (읽기용 parseSiteContent가 필드 단위로 검증할 때 쓴다).
+export const businessFieldsSchema = z.object({
+  phone: z.preprocess(
+    normalizePhone,
+    z
+      .string()
+      .regex(/^[0-9][0-9-]{6,14}[0-9]$/, "전화번호는 숫자와 하이픈만 쓸 수 있습니다")
+      .optional(),
+  ),
+  address: optionalBusinessText(200),
+  hours: optionalBusinessText(100),
+  kakao: optionalBusinessText(50),
 });
+
+// 입력 안 한 필드는 키째로 뺀다 ({ phone: undefined } → {}).
+export const businessSchema = businessFieldsSchema.transform(
+  (business) =>
+    Object.fromEntries(Object.entries(business).filter(([, value]) => value !== undefined)) as typeof business,
+);
 
 export const siteContentSchema = z.object({
   sections: sectionsSchema,

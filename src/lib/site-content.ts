@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import {
-  businessSchema,
+  businessFieldsSchema,
   MAX_SECTIONS,
   sectionSchema,
   siteContentSchema,
@@ -177,9 +177,10 @@ function parseBusiness(raw: unknown, issues: SiteContentIssue[]): Business {
   const business: Business = {};
   for (const key of ["phone", "address", "hours", "kakao"] as const) {
     if (raw[key] === undefined) continue;
-    const result = businessSchema.shape[key].safeParse(raw[key]);
-    if (result.success) business[key] = result.data;
-    else issues.push({ path: `business.${key}`, reason: describe(result.error), fix: "removed" });
+    const result = businessFieldsSchema.shape[key].safeParse(raw[key]);
+    if (result.success) {
+      if (result.data !== undefined) business[key] = result.data;
+    } else issues.push({ path: `business.${key}`, reason: describe(result.error), fix: "removed" });
   }
   return business;
 }

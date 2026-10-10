@@ -100,6 +100,16 @@ describe("parseSiteContent (읽기용)", () => {
     expect(result.issues.map((i) => i.path)).toEqual(["theme.photo", "business.phone"]);
   });
 
+  it("빈 문자열 가게 정보는 오류 없이 입력 안 함으로 읽는다", () => {
+    const result = parseSiteContent(
+      { sections: [hero], theme, business: { phone: "", address: business.address, kakao: " " } },
+      ctx,
+    );
+    expect(result.content.business).toEqual({ address: business.address });
+    expect(Object.keys(result.content.business)).toEqual(["address"]);
+    expect(result.issues).toEqual([]);
+  });
+
   it("객체가 아닌 값은 전체를 템플릿으로 대체한다", () => {
     const result = parseSiteContent(null, ctx);
     expect(result.content).toEqual(template);

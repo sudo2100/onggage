@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { siteContentSchema, type SiteContent } from "./site-schema";
+import { businessSchema, siteContentSchema, type SiteContent } from "./site-schema";
 
 const SITE_ID = "aaaaaaaa-0000-4000-8000-000000000001";
 
@@ -80,5 +80,33 @@ describe("siteContentSchema", () => {
     const content = validContent();
     expect(siteContentSchema.safeParse({ ...content, business: {} }).success).toBe(true);
     expect(siteContentSchema.safeParse({ ...content, business: { phone: "전화 주세요" } }).success).toBe(false);
+  });
+});
+
+describe("businessSchema", () => {
+  it("빈 전화번호는 입력 안 함으로 저장할 수 있다", () => {
+    for (const phone of ["", "   "]) {
+      const result = businessSchema.safeParse({ phone });
+      expect(result.success).toBe(true);
+      expect(result.data).not.toHaveProperty("phone");
+    }
+  });
+
+  it("다른 필드의 빈 문자열도 입력 안 함으로 처리한다", () => {
+    const result = businessSchema.parse({ address: "", hours: "  ", kakao: "", phone: "" });
+    expect(result).toEqual({});
+    expect(Object.keys(result)).toEqual([]);
+  });
+
+  it("띄어 쓴 전화번호를 하이픈으로 정리한다", () => {
+    expect(businessSchema.parse({ phone: "010 1234 5678" }).phone).toBe("010-1234-5678");
+    expect(businessSchema.parse({ phone: "  031  905 - 1234 " }).phone).toBe("031-905-1234");
+    expect(businessSchema.parse({ phone: "1588-1234" }).phone).toBe("1588-1234");
+  });
+
+  it("문자가 섞인 전화번호는 거부한다", () => {
+    for (const phone of ["010-1234-567O", "010 1234 abcd", "전화 010-1234-5678", "+82 10 1234 5678"]) {
+      expect(businessSchema.safeParse({ phone }).success).toBe(false);
+    }
   });
 });
