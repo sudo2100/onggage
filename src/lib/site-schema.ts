@@ -146,6 +146,20 @@ const normalizePhone = (value: unknown) => {
 
 const optionalBusinessText = (max: number) => z.preprocess(blankToUndefined, requiredText(max).optional());
 
+// 카카오톡: 채널 링크(https://pf.kakao.com/_…, 채팅 바로가기 /chat 포함), 오픈채팅 링크(https://open.kakao.com/o/…),
+// 또는 링크가 아닌 검색용 아이디(@담소식당). 링크는 이 두 형식만 허용한다.
+export const KAKAO_LINK_PATTERN =
+  /^https:\/\/(?:pf\.kakao\.com\/_[A-Za-z0-9]+(?:\/chat)?|open\.kakao\.com\/o\/[A-Za-z0-9]+)\/?$/;
+
+const kakaoSchema = z
+  .string()
+  .trim()
+  .max(100)
+  .refine(
+    (value) => KAKAO_LINK_PATTERN.test(value) || (!/[/:]/.test(value) && value.length <= 50),
+    "카카오톡은 채널(https://pf.kakao.com/_…)·오픈채팅(https://open.kakao.com/o/…) 링크나 @아이디만 쓸 수 있습니다",
+  );
+
 // 필드별 스키마 (읽기용 parseSiteContent가 필드 단위로 검증할 때 쓴다).
 export const businessFieldsSchema = z.object({
   phone: z.preprocess(
@@ -157,7 +171,7 @@ export const businessFieldsSchema = z.object({
   ),
   address: optionalBusinessText(200),
   hours: optionalBusinessText(100),
-  kakao: optionalBusinessText(50),
+  kakao: z.preprocess(blankToUndefined, kakaoSchema.optional()),
 });
 
 // 입력 안 한 필드는 키째로 뺀다 ({ phone: undefined } → {}).

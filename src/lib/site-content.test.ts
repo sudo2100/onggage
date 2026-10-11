@@ -21,6 +21,25 @@ describe("validateSiteContent (저장용)", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.errors.map((e) => e.path)).toContain("sections[1].title");
   });
+
+  it("허용하지 않는 카카오톡 링크가 있으면 저장하지 않는다", () => {
+    const result = validateSiteContent({
+      sections: [hero],
+      theme,
+      business: { ...business, kakao: "https://example.com/kakao" },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.map((e) => e.path)).toEqual(["business.kakao"]);
+  });
+
+  it("카카오톡 채널 링크는 저장할 수 있다", () => {
+    const result = validateSiteContent({
+      sections: [hero],
+      theme,
+      business: { ...business, kakao: "https://pf.kakao.com/_damso" },
+    });
+    expect(result.ok).toBe(true);
+  });
 });
 
 describe("resolveGeneratedContent (AI 생성 결과)", () => {
