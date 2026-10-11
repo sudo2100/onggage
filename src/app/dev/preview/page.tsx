@@ -9,7 +9,8 @@ export default function DevPreviewPage() {
     <main className="bg-neutral-100 px-4 py-8 text-neutral-900">
       <h1 className="text-2xl font-semibold">디자인 미리보기</h1>
       <p className="mt-1 text-sm text-neutral-600">
-        개발 환경에서만 열립니다. 각 디자인의 &quot;가게 정보 없음&quot;을 누르면 business가 빈 상태를 봅니다.
+        개발 환경에서만 열립니다. 각 디자인의 &quot;가게 정보 없음&quot;은 business가 빈 상태, &quot;긴 글&quot;은
+        띄어쓰기 없는 긴 글·링크를 넣은 상태입니다.
       </p>
       <div className="mt-8 grid gap-12">
         {DESIGNS.map((design) => (
@@ -27,6 +28,9 @@ export default function DevPreviewPage() {
               </Link>
               <Link className="underline" href={`/dev/preview/${design.id}/empty`}>
                 가게 정보 없음
+              </Link>
+              <Link className="underline" href={`/dev/preview/${design.id}/long`}>
+                긴 글
               </Link>
             </p>
             <div className="mt-3 flex items-start gap-4 overflow-x-auto pb-2">

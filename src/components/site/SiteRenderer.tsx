@@ -30,6 +30,7 @@ type Props = {
 // 공개 사이트와 편집실 미리보기가 함께 쓰는 렌더러. content는 parseSiteContent를 거친 값을 넘긴다.
 // 앱의 다크 모드와 상관없이 사이트는 늘 밝은 화면으로 그린다.
 // 루트가 @container라 섹션 배치는 화면 폭이 아니라 이 상자의 폭에 반응한다.
+// 루트의 overflow-wrap: anywhere는 모든 섹션에 적용된다: 띄어쓰기 없는 긴 글·링크도 좁은 폭에서 넘치지 않는다.
 export function SiteRenderer({
   content,
   industry,
@@ -68,7 +69,7 @@ export function SiteRenderer({
   return (
     <div
       data-site-root
-      className={`${siteFontClass(content.theme.font)} @container flex min-h-full flex-1 flex-col bg-(--site-bg) leading-[1.7] text-(--site-ink)`}
+      className={`${siteFontClass(content.theme.font)} @container flex min-h-full flex-1 flex-col bg-(--site-bg) leading-[1.7] text-(--site-ink) [overflow-wrap:anywhere]`}
       style={style}
     >
       <main className="flex-1">

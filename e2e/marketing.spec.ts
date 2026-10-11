@@ -33,7 +33,8 @@ test("랜딩 → 디자인 목록 → 상세 → 시작하기까지 상호가 �
   await card.locator("[data-scaled-preview]").click();
   await expect(page).toHaveURL(/\/designs\/beauty-a\?name=.+&industry=beauty$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("결");
-  await expect(previewTitle(page.locator("[data-scaled-preview]"))).toHaveText("결 헤어 일산점");
+  // 이전 화면(목록)의 미리보기가 숨겨진 채 남아 있을 수 있어 상세 미리보기 상자([data-device]) 안만 본다.
+  await expect(previewTitle(page.locator("[data-device] [data-scaled-preview]"))).toHaveText("결 헤어 일산점");
 
   const href = await page.getByRole("link", { name: "이 디자인으로 시작" }).getAttribute("href");
   const url = new URL(href ?? "", "http://localhost");

@@ -54,6 +54,27 @@ test.describe("모바일 폭(390px)", () => {
         expect(await photo.evaluate((el) => getComputedStyle(el).backgroundImage)).toContain("gradient");
       });
     }
+
+    // long: 띄어쓰기 없는 500자 소개 글, 긴 URL이 든 공지, 긴 부제·메뉴 이름·설명·주소 (sample.ts)
+    test(`${id} (긴 글·긴 링크): 가로 스크롤이 없고 내용이 섹션 밖으로 넘치지 않는다`, async ({ page }) => {
+      await page.goto(`/dev/preview/${id}/long`);
+      await expect(page.locator("[data-site-root]")).toBeVisible();
+      await waitForFonts(page);
+
+      // 긴 글이 실제로 들어가 있는지 먼저 확인한다.
+      await expect(page.locator('[data-section="about"] p')).toHaveText("가".repeat(500));
+      await expect(page.locator('[data-section="notice"] p')).toContainText("https://example.com/aaaa");
+
+      const result = await page.evaluate(() => {
+        const viewport = document.documentElement.clientWidth;
+        const overflowing = [...document.querySelectorAll("[data-site-root] *")]
+          .filter((el) => el.getBoundingClientRect().right > viewport + 0.5)
+          .map((el) => `${el.tagName.toLowerCase()} ${(el.textContent ?? "").slice(0, 20)}`);
+        return { scrollWidth: document.documentElement.scrollWidth, viewport, overflowing };
+      });
+      expect(result.overflowing).toEqual([]);
+      expect(result.scrollWidth).toBeLessThanOrEqual(result.viewport);
+    });
   }
 
   test("가게 정보가 있으면 하단 버튼이 보이고, 비면 숨는다", async ({ page }) => {
@@ -138,12 +159,16 @@ for (const font of ["myeongjo", "batang", "dodum", "plex"] as const) {
     }
 
     expect(fontRequests.length).toBeGreaterThan(0);
+    // 개발 서버에서만 뜨는 Next.js 개발 도구(화면 구석 N 버튼)는 자체 글꼴(nextjs…)을 내려받을 때가 있다.
+    // 사이트가 아니라 개발 도구의 글꼴이라 판정에서 뺀다.
     const downloaded = new Set(
-      fontRequests.map((path) => {
-        const family = fontFaces[path];
-        expect(family, `@font-face에 없는 글꼴 파일: ${path}`).toBeDefined();
-        return family;
-      }),
+      fontRequests
+        .map((path) => {
+          const family = fontFaces[path];
+          expect(family, `@font-face에 없는 글꼴 파일: ${path}`).toBeDefined();
+          return family;
+        })
+        .filter((family) => !family.startsWith("nextjs")),
     );
 
     const themeFamily = FONT_FAMILIES[font];

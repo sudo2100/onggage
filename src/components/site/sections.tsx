@@ -27,8 +27,9 @@ export type SectionContext = {
   embedded: boolean;
 };
 
-// 띄어쓰기 없는 긴 상호도 좁은 폭에서 넘치지 않게 필요하면 글자 단위로 줄을 바꾼다.
-const heading = "font-(family-name:--font-site) break-keep [overflow-wrap:anywhere] tracking-tight";
+// 줄바꿈: 한글은 단어 단위(break-keep)로 바꾸되, 띄어쓰기 없는 긴 글·링크는 SiteRenderer 루트의
+// overflow-wrap: anywhere로 필요할 때 글자 단위로 바꿔 좁은 폭에서도 넘치지 않는다.
+const heading = "font-(family-name:--font-site) break-keep tracking-tight";
 const linkClass = "underline underline-offset-4 decoration-1";
 
 function Heading({
@@ -231,7 +232,7 @@ export function InfoSection({ section, ctx }: { section: SectionOf<"info">; ctx:
   return (
     <SectionShell section={section} ctx={ctx}>
       <SectionTitle ctx={ctx}>{section.title}</SectionTitle>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[15px] [overflow-wrap:anywhere]">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[15px]">
         {hours ? (
           <>
             <dt className="opacity-65">시간</dt>
@@ -321,7 +322,7 @@ export function ContactSection({ section, ctx }: { section: SectionOf<"contact">
           </div>
         </form>
         {phone || kakao ? (
-          <div className="grid content-start gap-2 [overflow-wrap:anywhere]">
+          <div className="grid content-start gap-2">
             {phone ? (
               <SiteLink ctx={ctx} href={telHref(phone)} className={card}>
                 <small className="block text-xs opacity-65">전화</small>
