@@ -109,4 +109,24 @@ describe("businessSchema", () => {
       expect(businessSchema.safeParse({ phone }).success).toBe(false);
     }
   });
+
+  it("카카오톡 채널·오픈채팅 링크와 @아이디는 허용한다", () => {
+    for (const kakao of ["https://pf.kakao.com/_xAbC12", "https://open.kakao.com/o/sAbC12", "@담소식당", "담소식당"]) {
+      expect(businessSchema.safeParse({ kakao }).success).toBe(true);
+    }
+  });
+
+  it("그 밖의 카카오톡 링크는 거부한다", () => {
+    for (const kakao of [
+      "http://pf.kakao.com/_xAbC12",
+      "https://pf.kakao.com/xAbC12",
+      "https://open.kakao.com/me/abc",
+      "https://pf.kakao.com.evil.example/_abc",
+      "https://example.com/_abc",
+      "pf.kakao.com/_xAbC12",
+      "javascript:alert(1)",
+    ]) {
+      expect(businessSchema.safeParse({ kakao }).success).toBe(false);
+    }
+  });
 });

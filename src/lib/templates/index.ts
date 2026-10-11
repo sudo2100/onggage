@@ -1,6 +1,9 @@
 // 업종별 템플릿 정의와 기본 섹션.
-// 문구는 클릭 프로토타입의 기본 말투를 따른다. 말투별 문구와 디자인 목록은 온보딩·디자인 선택 작업에서 추가한다.
+// 문구는 클릭 프로토타입의 기본 말투를 따른다. 말투별 문구는 온보딩 작업에서 추가한다.
 import type { Industry, ListItem, SiteContent, Theme } from "@/lib/site-schema";
+import { getDesignsForIndustry } from "./designs";
+
+export * from "./designs";
 
 type Template = {
   subtitle: string;
@@ -10,7 +13,6 @@ type Template = {
   listTitle: string;
   items: ListItem[];
   infoTitle: string;
-  theme: Theme;
 };
 
 const TEMPLATES: Record<Industry, Template> = {
@@ -26,7 +28,6 @@ const TEMPLATES: Record<Industry, Template> = {
       { name: "계절 나물 비빔밥", description: "그날 들어온 나물 5가지", price: "9,500원" },
     ],
     infoTitle: "영업 안내",
-    theme: { accent: "#7A4B1F", font: "myeongjo", layout: "split" },
   },
   beauty: {
     subtitle: "손질이 쉬운 머리, 오래 가는 스타일",
@@ -40,7 +41,6 @@ const TEMPLATES: Record<Industry, Template> = {
       { name: "뿌리 염색", description: "두피 보호제 사용", price: "45,000원" },
     ],
     infoTitle: "영업 안내",
-    theme: { accent: "#8C5A7A", font: "dodum", layout: "center" },
   },
   stay: {
     subtitle: "숲과 맞닿은 조용한 독채 스테이",
@@ -54,7 +54,6 @@ const TEMPLATES: Record<Industry, Template> = {
       { name: "독채", description: "6인 기준, 바비큐장 포함", price: "260,000원부터" },
     ],
     infoTitle: "이용 안내",
-    theme: { accent: "#4F6A55", font: "batang", layout: "split" },
   },
   pro: {
     subtitle: "복잡한 세무, 처음부터 끝까지 한 사람이 맡습니다",
@@ -68,12 +67,12 @@ const TEMPLATES: Record<Industry, Template> = {
       { name: "기장 대행", description: "월별 장부 관리", price: "월 100,000원부터" },
     ],
     infoTitle: "상담 안내",
-    theme: { accent: "#1E3A5F", font: "plex", layout: "split" },
   },
 };
 
+// 업종의 첫 번째 디자인이 기본 디자인이다.
 export function getTemplateTheme(industry: Industry): Theme {
-  return { ...TEMPLATES[industry].theme };
+  return { ...getDesignsForIndustry(industry)[0].theme };
 }
 
 // 업종 기본 초안. 가게 정보(business)는 온보딩에서 사장님이 입력하므로 비워 둔다.
