@@ -96,6 +96,68 @@ describe("SiteRenderer", () => {
     expect(form?.getAttribute("action")).toBeNull();
   });
 
+  it("문의 저장 기능이 꺼져 있으면(기본) 보내기 버튼을 비활성화하고 안내 문구를 보여 준다", () => {
+    const container = renderSite(foodContent());
+    const contact = container.querySelector('[data-section="contact"]');
+    const button = contact?.querySelector("form button");
+    expect(button?.hasAttribute("disabled")).toBe(true);
+    const notice = contact?.querySelector("[data-inquiry-notice]");
+    expect(notice?.textContent).toBe("온라인 문의는 준비 중이에요. 전화나 카카오톡으로 연락해 주세요.");
+    expect(button?.getAttribute("aria-describedby")).toBe(notice?.id);
+  });
+
+  it("inquiryEnabled를 켜면 보내기 버튼이 활성화되고 안내 문구가 사라진다", () => {
+    const { container } = render(
+      <SiteRenderer content={foodContent()} industry="food" siteName="담소 식당" inquiryEnabled />,
+    );
+    const contact = container.querySelector('[data-section="contact"]');
+    expect(contact?.querySelector("form button")?.hasAttribute("disabled")).toBe(false);
+    expect(contact?.querySelector("[data-inquiry-notice]")).toBeNull();
+  });
+
+  it("대표 화면 버튼은 문의 섹션으로 가는 링크다", () => {
+    const container = renderSite(foodContent());
+    const cta = container.querySelector('[data-section="hero"] [data-cta]');
+    expect(cta?.tagName).toBe("A");
+    expect(cta?.getAttribute("href")).toBe("#contact");
+    expect(container.querySelector("section#contact")).not.toBeNull();
+  });
+
+  it("문의 섹션이 숨겨져 있으면 대표 화면 버튼은 링크 없이 모양만 보여 준다", () => {
+    const content = foodContent();
+    content.sections = content.sections.map((s) => (s.type === "contact" ? { ...s, visible: false } : s));
+    const cta = renderSite(content).querySelector('[data-section="hero"] [data-cta]');
+    expect(cta?.tagName).toBe("SPAN");
+    expect(cta?.hasAttribute("href")).toBe(false);
+    expect(cta?.textContent).toBe("예약·문의하기");
+  });
+
+  describe("사진 모음", () => {
+    const gallery = (photos: string[]) => {
+      const content = foodContent();
+      content.sections = [...content.sections, { id: "gallery", type: "gallery", visible: true, title: "사진 모음", photos }];
+      return content;
+    };
+
+    it("사진이 없으면 공개 화면에서 섹션을 그리지 않는다", () => {
+      expect(renderSite(gallery([])).querySelector('[data-section="gallery"]')).toBeNull();
+    });
+
+    it("showPlaceholders를 켜면 사진 없이도 자리 표시를 그린다 (편집실 미리보기)", () => {
+      const { container } = render(
+        <SiteRenderer content={gallery([])} industry="food" siteName="담소 식당" showPlaceholders />,
+      );
+      const section = container.querySelector('[data-section="gallery"]');
+      expect(section?.querySelectorAll('[data-photo="placeholder"]')).toHaveLength(3);
+    });
+
+    it("사진이 있으면 공개 화면에서도 그린다", () => {
+      vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");
+      const container = renderSite(gallery(["aaaaaaaa-0000-4000-8000-000000000001/shop-1.webp"]));
+      expect(container.querySelectorAll('[data-section="gallery"] [data-photo="image"] img')).toHaveLength(1);
+    });
+  });
+
   it("사진이 없으면 색 배경, 있으면 Storage 공개 주소로 보여 준다", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");
     const without = renderSite(foodContent());

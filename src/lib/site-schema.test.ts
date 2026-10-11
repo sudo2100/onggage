@@ -116,8 +116,18 @@ describe("businessSchema", () => {
     }
   });
 
+  it("카카오톡 채널 링크 끝의 /chat(채팅 바로가기)을 허용한다", () => {
+    for (const kakao of ["https://pf.kakao.com/_abc/chat", "https://pf.kakao.com/_xAbC12/chat/"]) {
+      expect(businessSchema.safeParse({ kakao }).success).toBe(true);
+    }
+  });
+
   it("그 밖의 카카오톡 링크는 거부한다", () => {
     for (const kakao of [
+      "https://pf.kakao.com/_abc/friend",
+      "https://pf.kakao.com/_abc/chatx",
+      "https://pf.kakao.com/_abc/chat/extra",
+      "https://open.kakao.com/o/abc/chat",
       "http://pf.kakao.com/_xAbC12",
       "https://pf.kakao.com/xAbC12",
       "https://open.kakao.com/me/abc",

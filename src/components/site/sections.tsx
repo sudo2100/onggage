@@ -13,6 +13,12 @@ export type SectionContext = {
   siteName: string;
   theme: Theme;
   business: Business;
+  // 보이는 문의 섹션으로 가는 앵커 (#contact). 문의 섹션이 숨겨져 있으면 undefined.
+  contactHref?: string;
+  // 문의 저장 기능이 붙으면 켠다. 꺼져 있으면 보내기 버튼을 비활성화하고 안내 문구를 보여 준다.
+  inquiryEnabled: boolean;
+  // 편집실 미리보기용 자리 표시 (사진 없는 사진 모음 등). 공개 사이트에서는 끈다.
+  showPlaceholders: boolean;
 };
 
 const heading = "font-(family-name:--font-site) break-keep tracking-tight";
@@ -42,10 +48,21 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className={`${heading} mb-5 text-[26px] leading-snug md:text-[28px]`}>{children}</h2>;
 }
 
-function AccentButton({ children }: { children: ReactNode }) {
+// 대표 화면 버튼: 문의 섹션이 보이면 그쪽으로 가는 링크, 아니면 버튼 모양만.
+function CtaButton({ label, href, tone }: { label: string; href?: string; tone: "accent" | "light" }) {
+  const className = `inline-block rounded-[3px] px-5 py-3 text-[15px] font-semibold ${
+    tone === "accent" ? "bg-(--site-accent) text-(--site-on-accent)" : "bg-white text-(--site-ink)"
+  }`;
+  if (href) {
+    return (
+      <a href={href} className={className} data-cta>
+        {label}
+      </a>
+    );
+  }
   return (
-    <span className="inline-block rounded-[3px] bg-(--site-accent) px-5 py-3 text-[15px] font-semibold text-(--site-on-accent)">
-      {children}
+    <span className={className} data-cta>
+      {label}
     </span>
   );
 }
@@ -68,9 +85,7 @@ export function HeroSection({ section, ctx }: { section: SectionOf<"hero">; ctx:
                 {section.subtitle}
               </p>
             ) : null}
-            <span className="inline-block rounded-[3px] bg-white px-5 py-3 text-[15px] font-semibold text-(--site-ink)">
-              {section.ctaLabel}
-            </span>
+            <CtaButton label={section.ctaLabel} href={ctx.contactHref} tone="light" />
           </div>
         </div>
       </section>
@@ -88,7 +103,7 @@ export function HeroSection({ section, ctx }: { section: SectionOf<"hero">; ctx:
               {section.subtitle}
             </p>
           ) : null}
-          <AccentButton>{section.ctaLabel}</AccentButton>
+          <CtaButton label={section.ctaLabel} href={ctx.contactHref} tone="accent" />
         </div>
         <SitePhoto
           path={ctx.theme.photo}
@@ -197,11 +212,13 @@ export function InfoSection({ section, ctx }: { section: SectionOf<"info">; ctx:
 
 // 문의 폼은 모양만 있다. 저장은 3단계에서 서버 Route Handler로 붙인다.
 // 버튼을 type="button"으로 두어 입력값이 전송되거나 주소창에 붙지 않게 한다.
+// inquiryEnabled가 꺼져 있으면(기본) 보내기 버튼을 비활성화하고 다른 연락 방법을 안내한다.
 export function ContactSection({ section, ctx }: { section: SectionOf<"contact">; ctx: SectionContext }) {
   const { phone, kakao } = ctx.business;
   const kakaoLink = kakao ? kakaoHref(kakao) : undefined;
   const field =
     "w-full min-w-0 rounded-[3px] border border-(--site-line-strong) bg-white px-3 py-2.5 text-(--site-ink) placeholder:text-(--site-ink)/55";
+  const noticeId = `${section.id}-inquiry-notice`;
 
   return (
     <SectionShell section={section} alt>
@@ -216,10 +233,17 @@ export function ContactSection({ section, ctx }: { section: SectionOf<"contact">
           <label className="flex items-center gap-2 text-[13px] opacity-85">
             <input type="checkbox" /> 개인정보 수집·이용에 동의합니다 (필수)
           </label>
+          {ctx.inquiryEnabled ? null : (
+            <p id={noticeId} className="text-sm font-semibold" data-inquiry-notice>
+              온라인 문의는 준비 중이에요. 전화나 카카오톡으로 연락해 주세요.
+            </p>
+          )}
           <div>
             <button
               type="button"
-              className="rounded-[3px] bg-(--site-accent) px-5 py-3 text-[15px] font-semibold text-(--site-on-accent)"
+              disabled={!ctx.inquiryEnabled}
+              aria-describedby={ctx.inquiryEnabled ? undefined : noticeId}
+              className="rounded-[3px] bg-(--site-accent) px-5 py-3 text-[15px] font-semibold text-(--site-on-accent) disabled:cursor-not-allowed disabled:opacity-50"
             >
               문의 보내기
             </button>
@@ -258,8 +282,9 @@ export function ContactSection({ section, ctx }: { section: SectionOf<"contact">
   );
 }
 
-export function GallerySection({ section }: { section: SectionOf<"gallery"> }) {
-  // 사진이 없으면 색 배경 칸 3개로 자리를 보여 준다.
+// 사진이 없으면 공개 화면에서는 그리지 않는다. 편집실 미리보기(showPlaceholders)에서는 색 배경 칸 3개로 자리를 보여 준다.
+export function GallerySection({ section, ctx }: { section: SectionOf<"gallery">; ctx: SectionContext }) {
+  if (section.photos.length === 0 && !ctx.showPlaceholders) return null;
   const photos: (string | undefined)[] = section.photos.length > 0 ? section.photos : [undefined, undefined, undefined];
   return (
     <SectionShell section={section}>

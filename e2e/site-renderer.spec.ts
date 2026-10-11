@@ -76,6 +76,16 @@ test.describe("모바일 폭(390px)", () => {
   });
 });
 
+test("대표 화면 버튼을 누르면 문의 섹션으로 가고, 문의 보내기는 준비 중으로 막혀 있다", async ({ page }) => {
+  await page.goto("/dev/preview/food-a/full");
+  await page.locator('[data-section="hero"]').getByRole("link", { name: "예약·문의하기" }).click();
+  await expect(page).toHaveURL(/#contact$/);
+  const contact = page.locator("section#contact");
+  await expect(contact).toBeInViewport();
+  await expect(contact.getByRole("button", { name: "문의 보내기" })).toBeDisabled();
+  await expect(contact.getByText("온라인 문의는 준비 중이에요. 전화나 카카오톡으로 연락해 주세요.")).toBeVisible();
+});
+
 test("PC 폭에서는 하단 버튼을 보여 주지 않는다", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/dev/preview/food-a/full");

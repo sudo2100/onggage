@@ -24,6 +24,15 @@ describe("가게 정보 링크", () => {
     expect(kakaoLabel("https://open.kakao.com/o/abc")).toBe("카카오톡 오픈채팅");
     expect(kakaoLabel("@담소식당")).toBe("@담소식당");
   });
+
+  it("채널 채팅 바로가기(/chat) 링크도 채널 링크로 쓴다", () => {
+    expect(kakaoHref("https://pf.kakao.com/_abc/chat")).toBe("https://pf.kakao.com/_abc/chat");
+    expect(kakaoLabel("https://pf.kakao.com/_abc/chat")).toBe("카카오톡 채널");
+    expect(getQuickActions({ kakao: "https://pf.kakao.com/_abc/chat" })[0]).toMatchObject({
+      kind: "kakao",
+      href: "https://pf.kakao.com/_abc/chat",
+    });
+  });
 });
 
 describe("getQuickActions (하단 고정 버튼)", () => {

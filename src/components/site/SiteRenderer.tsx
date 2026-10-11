@@ -19,13 +19,26 @@ type Props = {
   content: SiteContent;
   industry: Industry;
   siteName: string;
+  // 문의 저장 기능(3단계)이 붙으면 true로 켠다. 기본은 꺼짐: 보내기 버튼 비활성화 + 안내 문구.
+  inquiryEnabled?: boolean;
+  // 편집실 미리보기에서만 켠다. 사진 없는 사진 모음 같은 빈 섹션에 자리 표시를 그린다.
+  showPlaceholders?: boolean;
 };
 
 // 공개 사이트와 편집실 미리보기가 함께 쓰는 렌더러. content는 parseSiteContent를 거친 값을 넘긴다.
 // 앱의 다크 모드와 상관없이 사이트는 늘 밝은 화면으로 그린다.
-export function SiteRenderer({ content, industry, siteName }: Props) {
+export function SiteRenderer({ content, industry, siteName, inquiryEnabled = false, showPlaceholders = false }: Props) {
   const colors = getSiteColors(content.theme.accent);
-  const ctx: SectionContext = { industry, siteName, theme: content.theme, business: content.business };
+  const contactSection = content.sections.find((section) => section.type === "contact" && section.visible);
+  const ctx: SectionContext = {
+    industry,
+    siteName,
+    theme: content.theme,
+    business: content.business,
+    contactHref: contactSection ? `#${contactSection.id}` : undefined,
+    inquiryEnabled,
+    showPlaceholders,
+  };
   const actions = getQuickActions(content.business);
 
   const style = {
@@ -78,7 +91,7 @@ function SiteSection({ section, ctx }: { section: Section; ctx: SectionContext }
     case "notice":
       return <NoticeSection section={section} />;
     case "gallery":
-      return <GallerySection section={section} />;
+      return <GallerySection section={section} ctx={ctx} />;
     case "reviews":
       return <ReviewsSection />;
   }
