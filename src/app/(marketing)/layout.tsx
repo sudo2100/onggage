@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderAccount } from "@/components/auth/HeaderAccount";
 
 // 마케팅 화면 공통 틀: 상단 바 + 바닥글. 색·글꼴은 앱 자체 디자인(--app-*, Pretendard)만 쓴다.
 export default function MarketingLayout({ children }: LayoutProps<"/">) {
@@ -9,7 +10,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
           <Link href="/" className="text-lg font-bold tracking-tight">
             온가게
           </Link>
-          <nav aria-label="주요 메뉴" className="flex flex-1 items-center gap-3 text-sm text-app-muted sm:gap-5">
+          <nav aria-label="주요 메뉴" className="flex flex-1 items-center gap-3 text-sm whitespace-nowrap text-app-muted sm:gap-5">
             <Link href="/designs" className="hover:text-app-ink">
               디자인
             </Link>
@@ -17,12 +18,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
               요금 안내
             </Link>
           </nav>
-          <Link
-            href="/designs"
-            className="shrink-0 rounded-lg bg-app-accent px-3.5 py-2 text-sm font-semibold text-app-accent-ink"
-          >
-            무료로 시작하기
-          </Link>
+          <HeaderAccount />
         </div>
       </header>
       <main className="flex-1">{children}</main>
@@ -32,6 +28,8 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
           <nav aria-label="바닥글 메뉴" className="flex gap-4">
             <Link href="/designs">디자인</Link>
             <Link href="/pricing">요금 안내</Link>
+            <Link href="/terms">이용약관</Link>
+            <Link href="/privacy">개인정보 처리방침</Link>
           </nav>
         </div>
       </footer>
