@@ -82,7 +82,9 @@ const PROVIDERS = [
   { id: "google", label: "구글로 계속하기", className: "border border-app-line bg-app-surface text-app-ink" },
 ] as const;
 
-// 소셜 로그인 버튼. formAction으로 감싼 폼의 값(next, 동의 체크)을 함께 보낸다.
+// 소셜 로그인 버튼. 감싼 폼의 값(next, 동의 체크)에 provider를 더해 같은 액션으로 보낸다.
+// React는 함수형 formAction 버튼의 name/value를 쓰지 못하게 하므로(값이 전송되지 않음),
+// 버튼마다 provider를 묶은 formAction을 만든다.
 // formNoValidate: 이메일·비밀번호 칸이 비어 있어도 눌린다 (동의 체크는 서버에서 검사).
 export function SocialButtons({ formAction }: { formAction: (formData: FormData) => void }) {
   return (
@@ -91,10 +93,12 @@ export function SocialButtons({ formAction }: { formAction: (formData: FormData)
         <button
           key={provider.id}
           type="submit"
-          name="provider"
-          value={provider.id}
-          formAction={formAction}
+          formAction={(formData) => {
+            formData.set("provider", provider.id);
+            formAction(formData);
+          }}
           formNoValidate
+          data-provider={provider.id}
           className={`rounded-lg px-4 py-3 font-semibold ${provider.className}`}
         >
           {provider.label}

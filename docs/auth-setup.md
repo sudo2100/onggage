@@ -19,10 +19,13 @@
 ## 2. 로컬 개발
 
 1. `pnpm exec supabase start` 후 출력의 `API_URL`, `ANON_KEY`(또는 `PUBLISHABLE_KEY`)를 `.env.local`의 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`에 넣는다.
+   `NEXT_PUBLIC_ROOT_DOMAIN`은 로컬에서 `localhost:3000`(도메인만)으로 둔다. 메일 링크·소셜 로그인 복귀 주소가 이 값으로 만들어진다. `http://localhost:3000`처럼 주소 전체를 적어도 동작하지만, 작업 6의 서브도메인 판별은 도메인만 적는 형식을 기준으로 한다.
 2. `supabase db reset`으로 마이그레이션을 적용한다.
 3. 로컬은 인증 메일이 꺼져 있다(`supabase/config.toml`의 `[auth.email] enable_confirmations = false`). 가입하면 바로 로그인된다.
 4. 비밀번호 재설정 메일 등은 실제로 발송되지 않고 Mailpit(<http://127.0.0.1:54324>)에 쌓인다.
-5. 운영과 같은 인증 메일 흐름을 로컬에서 시험하려면 `enable_confirmations = true`로 바꾸고 `supabase stop && supabase start`.
+5. 운영과 같은 인증 메일 흐름을 로컬에서 시험하려면 `enable_confirmations = true`로 바꾼다.
+
+> **`supabase/config.toml`을 바꾸면 `supabase stop` → `supabase start`로 다시 켜야 적용된다.** 실행 중인 Supabase는 시작할 때 읽은 설정(인증 메일, 소셜 로그인, 메일 양식, Redirect URL 등)을 그대로 쓴다. `supabase/.env`의 키를 바꿨을 때도 같다.
 
 ### 로컬에서 카카오·구글 켜기
 
@@ -34,7 +37,7 @@
    SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=...
    SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=...
    ```
-3. `supabase/config.toml`의 `[auth.external.kakao]`, `[auth.external.google]`에서 `enabled = true`로 바꾸고 Supabase를 다시 시작한다. (이 변경은 커밋하지 않거나, 팀 전원이 키를 갖춘 뒤에 커밋한다.)
+3. `supabase/config.toml`의 `[auth.external.kakao]`, `[auth.external.google]`에서 `enabled = true`로 바꾸고 `supabase stop` → `supabase start`로 다시 켠다. (이 변경은 커밋하지 않거나, 팀 전원이 키를 갖춘 뒤에 커밋한다.)
 
 ## 3. 카카오 로그인
 
