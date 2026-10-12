@@ -87,6 +87,9 @@
 2. **Authentication → Sign In / Providers → Email**
    - Confirm email: **ON** (운영은 인증 메일을 켠다)
    - Minimum password length: **8** (앱 검사와 같게)
+   - **Secure password change: ON** (로컬 `config.toml`의 `secure_password_change = true`와 같게). 로그인한 지 24시간이 지난 세션으로는 다시 인증하지 않으면 비밀번호를 바꿀 수 없다. 탈취된 오래된 세션으로 비밀번호를 바꿔 계정을 빼앗는 것을 막는다.
+     - 비밀번호 찾기 흐름에는 영향이 없다. 재설정 메일 링크가 그 자리에서 새로 로그인시키므로 "최근 로그인"에 해당한다 (E2E "비밀번호 찾기"로 확인).
+     - 나중에 로그인한 상태에서 비밀번호를 바꾸는 "계정 설정" 화면을 만들면 `reauthentication_needed` 오류가 날 수 있다. 그때는 `supabase.auth.reauthenticate()`(메일로 받은 확인 코드)를 거치는 흐름을 함께 만든다.
 3. **Authentication → Emails → Templates**: `supabase/templates/confirmation.html`(Confirm signup), `supabase/templates/recovery.html`(Reset password)의 내용과 제목(`supabase/config.toml`의 `subject`)을 그대로 붙여 넣는다. 기본 양식(`{{ .ConfirmationURL }}`)을 그대로 두면 메일을 요청한 브라우저에서만 링크가 열린다.
 4. **Authentication → Rate Limits**: 메일 발송 한도는 SMTP를 붙인 뒤 시간당 30~100통 정도로 올린다.
 5. 아래 6장대로 **SMTP를 반드시 연결**한다.

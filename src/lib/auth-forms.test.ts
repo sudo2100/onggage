@@ -66,6 +66,7 @@ describe("동의 기록", () => {
 describe("authErrorMessage", () => {
   it("알려진 코드는 한국어 안내, 모르는 코드는 일반 안내", () => {
     expect(authErrorMessage("invalid_credentials")).toBe("이메일 또는 비밀번호가 맞지 않아요.");
+    expect(authErrorMessage("reauthentication_needed")).toContain("비밀번호 찾기 메일을 다시 받아");
     expect(authErrorMessage("something_new")).toBe("잠시 문제가 생겼어요. 다시 시도해 주세요.");
     expect(authErrorMessage(undefined)).toBe("잠시 문제가 생겼어요. 다시 시도해 주세요.");
   });

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { expect as baseExpect, test, type Page } from "@playwright/test";
+import { expect as baseExpect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 // 가입·로그인 뒤 이동은 개발 서버가 화면을 처음 컴파일하는 시간까지 기다려야 해서 여유를 둔다
 // (전체 E2E를 병렬로 돌리면 5초 기본값을 넘길 때가 있다).
@@ -279,5 +279,83 @@ test.describe("두 사용자", () => {
     await expect(pageA).toHaveURL("/login?next=%2Fadmin");
 
     await Promise.all([a.close(), b.close(), guest.close()]);
+  });
+});
+
+// 로컬 Supabase는 메일을 실제로 보내지 않고 Mailpit에 쌓는다 (supabase start 출력의 MAILPIT_URL).
+const MAILPIT_URL = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
+
+// 받은 메일에서 token_hash가 붙은 링크를 꺼낸다. 메일이 늦게 올 수 있어 잠시 기다린다.
+async function waitForMailLink(request: APIRequestContext, email: string): Promise<string> {
+  const query = encodeURIComponent(`to:"${email}"`);
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const search = await (await request.get(`${MAILPIT_URL}/api/v1/search?query=${query}`)).json();
+    const id: string | undefined = search.messages?.[0]?.ID;
+    if (id) {
+      const message = await (await request.get(`${MAILPIT_URL}/api/v1/message/${id}`)).json();
+      const href = /href="([^"]*token_hash=[^"]*)"/.exec(message.HTML ?? "")?.[1];
+      if (href) return href.replaceAll("&amp;", "&");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`${email}로 온 메일 링크를 찾지 못했습니다 (${MAILPIT_URL})`);
+}
+
+test.describe("비밀번호 찾기", () => {
+  test.beforeEach(needsDb);
+
+  test("재설정 메일 링크 → 새 비밀번호 → next로 가고, 새 비밀번호로만 로그인된다", async ({ page }) => {
+    const email = uniqueEmail();
+    await page.goto("/signup");
+    await signUpThroughForm(page, email);
+    await expect(page).toHaveURL("/start");
+    await page.context().clearCookies();
+
+    await page.goto("/forgot-password?next=" + encodeURIComponent("/studio/abc"));
+    await page.getByLabel("가입한 이메일").fill(email);
+    await page.getByRole("button", { name: "재설정 메일 보내기" }).click();
+    await expect(page.getByRole("status")).toContainText("비밀번호 재설정 메일을 보냈어요");
+
+    const link = await waitForMailLink(page.request, email);
+    const linkUrl = new URL(link);
+    expect(linkUrl.pathname).toBe("/auth/callback");
+    expect(linkUrl.searchParams.get("type")).toBe("recovery");
+
+    await page.goto(link);
+    await expect(page).toHaveURL("/reset-password?next=%2Fstudio%2Fabc");
+    const newPassword = "onggage-new-5678";
+    await page.getByLabel(/^새 비밀번호 \(/).fill(newPassword);
+    await page.getByLabel("새 비밀번호 확인").fill(newPassword);
+    await page.getByRole("button", { name: "비밀번호 바꾸기" }).click();
+    await expect(page).toHaveURL("/studio/abc");
+    await page.context().clearCookies();
+
+    // 예전 비밀번호는 더 이상 안 된다.
+    await logIn(page, email);
+    await expect(page.getByRole("alert").filter({ hasText: "이메일 또는 비밀번호가 맞지 않아요." })).toBeVisible();
+
+    await page.getByLabel("비밀번호").fill(newPassword);
+    await page.getByRole("button", { name: "로그인", exact: true }).click();
+    await expect(page).toHaveURL("/start");
+  });
+
+  test("이미 쓴 재설정 링크는 다시 쓸 수 없다", async ({ page }) => {
+    const email = uniqueEmail();
+    await page.goto("/signup");
+    await signUpThroughForm(page, email);
+    await expect(page).toHaveURL("/start");
+    await page.context().clearCookies();
+
+    await page.goto("/forgot-password");
+    await page.getByLabel("가입한 이메일").fill(email);
+    await page.getByRole("button", { name: "재설정 메일 보내기" }).click();
+    const link = await waitForMailLink(page.request, email);
+
+    await page.goto(link);
+    await expect(page).toHaveURL("/reset-password");
+    await page.context().clearCookies();
+    await page.goto(link);
+    await expect(page).toHaveURL("/forgot-password?error=expired");
+    await expect(page.getByRole("alert").filter({ hasText: "재설정 링크가 만료되었거나" })).toBeVisible();
   });
 });

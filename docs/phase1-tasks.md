@@ -290,6 +290,7 @@ Supabase Auth로 가입·로그인을 만들어 줘.
 - 이메일 가입은 동의 정보를 가입 요청의 user metadata에 싣고 `handle_new_user` 트리거가 `profiles`로 옮긴다. 값이 이상하면 비워 두고 위 검사가 `/signup/agree`로 보낸다.
 - 카카오 이메일 동의항목은 비즈 앱만 설정할 수 있고, Supabase가 기본으로 요청해 일반 앱은 KOE205로 막힌다 → 비즈 앱 전환 권장 (docs/auth-setup.md).
 - 네이버는 조사·계획만: Supabase custom OAuth(`custom:naver`)를 스테이징에서 먼저 시험, 안 되면 직접 OAuth + Admin API (docs/auth-setup.md).
+- Secure password change를 켠다(로컬 `config.toml`, 운영 대시보드). 비밀번호 찾기 흐름은 영향 없음을 E2E로 확인했다. 로그인 상태에서 비밀번호를 바꾸는 화면을 만들 때는 재인증 흐름이 필요하다.
 
 계획과 달라진 점:
 - 메일 링크와 소셜 로그인 복귀를 `/auth/callback` 하나로 처리한다 (계획의 `/auth/confirm`은 만들지 않음).

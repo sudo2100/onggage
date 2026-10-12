@@ -58,6 +58,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   email_exists: "이미 가입된 이메일이에요. 로그인해 주세요.",
   weak_password: "비밀번호가 너무 쉬워요. 다른 비밀번호로 정해 주세요.",
   same_password: "지금 쓰는 비밀번호와 다른 비밀번호로 정해 주세요.",
+  // Secure password change: 로그인한 지 오래된 세션에서 비밀번호를 바꾸려 할 때
+  reauthentication_needed: "보안을 위해 비밀번호 찾기 메일을 다시 받아 새 비밀번호를 정해 주세요.",
   over_email_send_rate_limit: "메일을 너무 자주 보냈어요. 잠시 후 다시 시도해 주세요.",
   over_request_rate_limit: "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
   signup_disabled: "지금은 가입을 받지 않고 있어요.",
