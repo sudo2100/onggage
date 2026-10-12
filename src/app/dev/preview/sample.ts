@@ -1,62 +1,50 @@
-// 개발용 미리보기 데이터: 작업 2의 업종 기본 초안 + 프로토타입의 예시 상호·가게 정보.
-import type { Business, Industry, SiteContent } from "@/lib/site-schema";
-import { DESIGNS, getDesign, getTemplateContent, type Design } from "@/lib/templates";
+// 개발용 미리보기 데이터: 업종 기본 초안 + 예시 가게 정보 (src/lib/templates/samples.ts).
+// 변형: full(예시 가게 정보), empty(가게 정보 없음), long(띄어쓰기 없는 긴 글·긴 링크로 넘침 확인)
+import type { SiteContent } from "@/lib/site-schema";
+import { DESIGNS, getDesign, type Design } from "@/lib/templates";
+import { getDesignPreviewContent } from "@/lib/templates/samples";
 
-export const BUSINESS_VARIANTS = ["full", "empty"] as const;
-export type BusinessVariant = (typeof BUSINESS_VARIANTS)[number];
+export const PREVIEW_VARIANTS = ["full", "empty", "long"] as const;
+export type PreviewVariant = (typeof PREVIEW_VARIANTS)[number];
 
-const SAMPLE_SHOPS: Record<Industry, { name: string; business: Business }> = {
-  food: {
-    name: "담소 식당",
-    business: {
-      hours: "매일 11:00–21:00 · 브레이크 15:00–17:00",
-      phone: "031-905-1234",
-      kakao: "https://pf.kakao.com/_damso",
-      address: "경기 고양시 일산동구 정발산로 24, 1층",
-    },
-  },
-  beauty: {
-    name: "결 헤어",
-    business: {
-      hours: "화–일 10:00–20:00 · 월요일 휴무",
-      phone: "031-922-5678",
-      kakao: "https://open.kakao.com/o/gyeolhair",
-      address: "경기 고양시 일산서구 주엽로 112, 2층",
-    },
-  },
-  stay: {
-    name: "숲속 쉼표 스테이",
-    business: {
-      hours: "입실 15:00 · 퇴실 11:00",
-      phone: "031-976-0000",
-      kakao: "@숲속쉼표",
-      address: "경기 고양시 덕양구 북한산로 301",
-    },
-  },
-  pro: {
-    name: "바른 세무회계",
-    business: {
-      hours: "평일 09:00–18:00 · 토요일 예약 상담",
-      phone: "031-901-2468",
-      kakao: "https://pf.kakao.com/_bareun",
-      address: "경기 고양시 일산동구 중앙로 1275, 7층",
-    },
-  },
-};
+export const LONG_TEXT = "가".repeat(500);
+export const LONG_URL = `https://example.com/${"a".repeat(180)}`;
+
+// 스키마 길이 제한 안에서 띄어쓰기 없는 가장 긴 글을 넣는다.
+function withLongText(content: SiteContent): SiteContent {
+  const sections = content.sections.map((section) => {
+    switch (section.type) {
+      case "hero":
+        return { ...section, subtitle: "나".repeat(100) };
+      case "about":
+        return { ...section, body: LONG_TEXT };
+      case "list":
+        return {
+          ...section,
+          items: [{ name: "다".repeat(50), description: "라".repeat(100), price: "9".repeat(30) }, ...section.items],
+        };
+      default:
+        return section;
+    }
+  });
+  return {
+    ...content,
+    sections: [
+      ...sections,
+      { id: "notice", type: "notice", visible: true, title: "공지", body: `예약은 이 주소에서 받아요: ${LONG_URL}` },
+    ],
+    business: { ...content.business, address: "마".repeat(200), hours: "바".repeat(100) },
+  };
+}
 
 export function getPreview(
   designId: string,
-  variant: BusinessVariant,
+  variant: PreviewVariant,
 ): { design: Design; siteName: string; content: SiteContent } | undefined {
   const design = getDesign(designId);
   if (!design) return undefined;
-  const shop = SAMPLE_SHOPS[design.industry];
-  const base = getTemplateContent(design.industry, shop.name);
-  return {
-    design,
-    siteName: shop.name,
-    content: { ...base, theme: { ...design.theme }, business: variant === "full" ? { ...shop.business } : {} },
-  };
+  const preview = getDesignPreviewContent(design, { business: variant === "empty" ? "empty" : "sample" });
+  return { design, ...preview, content: variant === "long" ? withLongText(preview.content) : preview.content };
 }
 
 export { DESIGNS };

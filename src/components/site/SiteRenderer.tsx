@@ -23,11 +23,22 @@ type Props = {
   inquiryEnabled?: boolean;
   // 편집실 미리보기에서만 켠다. 사진 없는 사진 모음 같은 빈 섹션에 자리 표시를 그린다.
   showPlaceholders?: boolean;
+  // 다른 페이지 안에 축소 미리보기로 넣을 때 켠다. 제목 태그·섹션 id·링크를 만들지 않는다 (sections.tsx 참고).
+  embedded?: boolean;
 };
 
 // 공개 사이트와 편집실 미리보기가 함께 쓰는 렌더러. content는 parseSiteContent를 거친 값을 넘긴다.
 // 앱의 다크 모드와 상관없이 사이트는 늘 밝은 화면으로 그린다.
-export function SiteRenderer({ content, industry, siteName, inquiryEnabled = false, showPlaceholders = false }: Props) {
+// 루트가 @container라 섹션 배치는 화면 폭이 아니라 이 상자의 폭에 반응한다.
+// 루트의 overflow-wrap: anywhere는 모든 섹션에 적용된다: 띄어쓰기 없는 긴 글·링크도 좁은 폭에서 넘치지 않는다.
+export function SiteRenderer({
+  content,
+  industry,
+  siteName,
+  inquiryEnabled = false,
+  showPlaceholders = false,
+  embedded = false,
+}: Props) {
   const colors = getSiteColors(content.theme.accent);
   const contactSection = content.sections.find((section) => section.type === "contact" && section.visible);
   const ctx: SectionContext = {
@@ -35,9 +46,10 @@ export function SiteRenderer({ content, industry, siteName, inquiryEnabled = fal
     siteName,
     theme: content.theme,
     business: content.business,
-    contactHref: contactSection ? `#${contactSection.id}` : undefined,
+    contactHref: contactSection && !embedded ? `#${contactSection.id}` : undefined,
     inquiryEnabled,
     showPlaceholders,
+    embedded,
   };
   const actions = getQuickActions(content.business);
 
@@ -57,7 +69,7 @@ export function SiteRenderer({ content, industry, siteName, inquiryEnabled = fal
   return (
     <div
       data-site-root
-      className={`${siteFontClass(content.theme.font)} flex min-h-full flex-1 flex-col bg-(--site-bg) leading-[1.7] text-(--site-ink)`}
+      className={`${siteFontClass(content.theme.font)} @container flex min-h-full flex-1 flex-col bg-(--site-bg) leading-[1.7] text-(--site-ink) [overflow-wrap:anywhere]`}
       style={style}
     >
       <main className="flex-1">
@@ -67,11 +79,11 @@ export function SiteRenderer({ content, industry, siteName, inquiryEnabled = fal
             <SiteSection key={section.id} section={section} ctx={ctx} />
           ))}
       </main>
-      <footer className="flex flex-wrap justify-between gap-2.5 px-4 py-6 text-[12.5px] md:px-10">
+      <footer className="flex flex-wrap justify-between gap-2.5 px-4 py-6 text-[12.5px] @3xl:px-10">
         <span className="opacity-75">© {siteName}</span>
         <span className="font-semibold">온가게로 만든 홈페이지</span>
       </footer>
-      {actions.length > 0 ? <QuickActionBar actions={actions} /> : null}
+      {actions.length > 0 ? <QuickActionBar actions={actions} embedded={embedded} /> : null}
     </div>
   );
 }
@@ -81,15 +93,15 @@ function SiteSection({ section, ctx }: { section: Section; ctx: SectionContext }
     case "hero":
       return <HeroSection section={section} ctx={ctx} />;
     case "about":
-      return <AboutSection section={section} />;
+      return <AboutSection section={section} ctx={ctx} />;
     case "list":
-      return <ListSection section={section} />;
+      return <ListSection section={section} ctx={ctx} />;
     case "info":
       return <InfoSection section={section} ctx={ctx} />;
     case "contact":
       return <ContactSection section={section} ctx={ctx} />;
     case "notice":
-      return <NoticeSection section={section} />;
+      return <NoticeSection section={section} ctx={ctx} />;
     case "gallery":
       return <GallerySection section={section} ctx={ctx} />;
     case "reviews":
@@ -98,25 +110,34 @@ function SiteSection({ section, ctx }: { section: Section; ctx: SectionContext }
 }
 
 // 하단 고정 버튼 (전화·카카오톡·길찾기). 값이 있는 항목만, 모바일 폭에서만 보인다.
-function QuickActionBar({ actions }: { actions: QuickAction[] }) {
+// embedded(축소 미리보기)에서는 고정하지 않고 링크 없이 모양만 그린다.
+function QuickActionBar({ actions, embedded }: { actions: QuickAction[]; embedded: boolean }) {
+  const itemClass = "border-r border-white/15 p-3 text-center last:border-r-0";
   return (
-    <nav
-      aria-label="빠른 연락"
+    <div
+      role={embedded ? undefined : "navigation"}
+      aria-label={embedded ? undefined : "빠른 연락"}
       data-quick-actions
-      className="sticky bottom-0 z-10 grid bg-(--site-ink) text-sm font-semibold text-white md:hidden"
+      className={`${embedded ? "" : "sticky bottom-0 z-10"} grid bg-(--site-ink) text-sm font-semibold text-white @3xl:hidden`}
       style={{ gridTemplateColumns: `repeat(${actions.length}, minmax(0, 1fr))` }}
     >
-      {actions.map((action) => (
-        <a
-          key={action.kind}
-          href={action.href}
-          data-action={action.kind}
-          {...(action.kind === "phone" ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-          className="border-r border-white/15 p-3 text-center last:border-r-0"
-        >
-          {action.label}
-        </a>
-      ))}
-    </nav>
+      {actions.map((action) =>
+        embedded ? (
+          <span key={action.kind} data-action={action.kind} className={itemClass}>
+            {action.label}
+          </span>
+        ) : (
+          <a
+            key={action.kind}
+            href={action.href}
+            data-action={action.kind}
+            {...(action.kind === "phone" ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+            className={itemClass}
+          >
+            {action.label}
+          </a>
+        ),
+      )}
+    </div>
   );
 }

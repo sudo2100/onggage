@@ -3,11 +3,31 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 앱 자체 디자인 (마케팅·편집실·관리자). 고객 사이트 색(--site-*)과 섞지 않는다. */
+  --app-bg: #f2f5f3;
+  --app-surface: #ffffff;
+  --app-ink: #16201d;
+  --app-muted: #5b6964;
+  --app-line: #d9e1dd;
+  --app-accent: #1d6b57;
+  --app-accent-ink: #ffffff;
+  --app-soft: #e2eee9;
+  --app-hi: #f0c24b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-app-bg: var(--app-bg);
+  --color-app-surface: var(--app-surface);
+  --color-app-ink: var(--app-ink);
+  --color-app-muted: var(--app-muted);
+  --color-app-line: var(--app-line);
+  --color-app-accent: var(--app-accent);
+  --color-app-accent-ink: var(--app-accent-ink);
+  --color-app-soft: var(--app-soft);
+  --color-app-hi: var(--app-hi);
   --font-sans: var(--font-pretendard), system-ui, sans-serif;
 }
 
@@ -15,6 +35,16 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --app-bg: #0f1513;
+    --app-surface: #17201d;
+    --app-ink: #e7eeeb;
+    --app-muted: #9baba5;
+    --app-line: #2a3632;
+    --app-accent: #4fb394;
+    --app-accent-ink: #06120e;
+    --app-soft: #1c2c27;
+    --app-hi: #e5b93c;
   }
 }
 

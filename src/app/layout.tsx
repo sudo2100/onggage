@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { getSiteUrl, SERVICE_NAME } from "@/lib/site-url";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -10,7 +11,11 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "온가게",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: `${SERVICE_NAME} — 상호만 넣으면 만들어지는 우리 가게 홈페이지`,
+    template: `%s | ${SERVICE_NAME}`,
+  },
   description: "상호와 업종만 넣으면 만들어지는 우리 가게 홈페이지",
 };
 
