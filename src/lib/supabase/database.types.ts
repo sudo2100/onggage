@@ -47,14 +47,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"id": string,"name": string | null,"signup_source": string | null
+                    "age_confirmed_at": string | null,"created_at": string,"id": string,"name": string | null,"privacy_agreed_at": string | null,"signup_source": string | null,"terms_agreed_at": string | null,"terms_version": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id": string,"name"?: string | null,"signup_source"?: string | null
+                    "age_confirmed_at"?: string | null,"created_at"?: string,"id": string,"name"?: string | null,"privacy_agreed_at"?: string | null,"signup_source"?: string | null,"terms_agreed_at"?: string | null,"terms_version"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string | null,"signup_source"?: string | null
+                    "age_confirmed_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string | null,"privacy_agreed_at"?: string | null,"signup_source"?: string | null,"terms_agreed_at"?: string | null,"terms_version"?: string | null
                   }
                   Relationships: [
                     
@@ -127,6 +127,9 @@ isOneToOne: false
                            },
 "is_site_published":
 { Args: { "target_site_id": string }; Returns: boolean
+                           },
+"record_signup_agreement":
+{ Args: { "agreed_version": string }; Returns: undefined
                            }
           }
           Enums: {

@@ -1,0 +1,5 @@
+<!-- 가입 인증 메일. RedirectTo는 앱이 보낸 /auth/callback?next=… 주소다 (Redirect URLs 허용 목록에 있어야 한다). -->
+<h2>온가게 가입을 완료해 주세요</h2>
+<p>아래 버튼을 누르면 가입이 완료되고, 고른 디자인으로 홈페이지 만들기가 이어집니다.</p>
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=signup">가입 완료하기</a></p>
+<p>링크는 한 시간 동안 쓸 수 있어요. 직접 가입하지 않으셨다면 이 메일은 무시해 주세요.</p>
