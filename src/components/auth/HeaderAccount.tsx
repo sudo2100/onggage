@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
+import { getMySite } from "@/lib/sites";
 
 const primaryClass = "shrink-0 rounded-lg bg-app-accent px-3.5 py-2 text-sm font-semibold text-app-accent-ink";
 
@@ -26,6 +27,8 @@ function GuestActions() {
 async function Account() {
   const user = await getCurrentUser();
   if (!user) return <GuestActions />;
+  // 사이트가 있으면 편집실로, 아직 없으면 만들기(/start)로.
+  const site = await getMySite(user.id);
   return (
     <>
       {/* 로그아웃은 POST(Server Action)로만. GET 링크로는 로그아웃되지 않는다. */}
@@ -34,8 +37,7 @@ async function Account() {
           로그아웃
         </button>
       </form>
-      {/* /studio 목록이 생기기 전까지 내 사이트는 /start로 보낸다. */}
-      <Link href="/start" className={primaryClass}>
+      <Link href={site ? `/studio/${site.id}` : "/start"} className={primaryClass}>
         내 사이트
       </Link>
     </>

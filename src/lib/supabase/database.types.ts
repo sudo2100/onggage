@@ -81,14 +81,14 @@ isOneToOne: false
                   ]
                 },"sites": {
                   Row: {
-                    "created_at": string,"custom_domain": string | null,"id": string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id": string,"slug": string,"status": Database["public"]['Enums']["site_status"],"template_id": string | null,"updated_at": string
+                    "created_at": string,"custom_domain": string | null,"id": string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id": string,"slug": string,"status": Database["public"]['Enums']["site_status"],"template_id": string | null,"tone": Database["public"]['Enums']["site_tone"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id"?: string,"slug": string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id"?: string,"slug": string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"],"name"?: string,"owner_id"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"],"name"?: string,"owner_id"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -119,7 +119,12 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "is_site_owner":
+            "create_site_with_draft":
+{ Args: { "draft_business": Json,"draft_sections": Json,"draft_theme": Json,"site_industry": Database["public"]['Enums']["industry"],"site_name": string,"site_template_id": string,"site_tone": Database["public"]['Enums']["site_tone"],"slug_base": string }; Returns: {
+              "site_id": string,"site_slug": string
+            }[]
+                           },
+"is_site_owner":
 { Args: { "target_site_id": string }; Returns: boolean
                            },
 "is_site_owner_path":
@@ -133,7 +138,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "industry": "food"|"beauty"|"stay"|"pro","inquiry_status": "new"|"doing"|"done","site_status": "draft"|"published"|"paused","subscription_plan": "free"|"basic"|"pro","version_kind": "draft"|"published"
+            "industry": "food"|"beauty"|"stay"|"pro","inquiry_status": "new"|"doing"|"done","site_status": "draft"|"published"|"paused","site_tone": "calm"|"warm"|"fresh","subscription_plan": "free"|"basic"|"pro","version_kind": "draft"|"published"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -249,7 +254,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "industry": ["food", "beauty", "stay", "pro"],"inquiry_status": ["new", "doing", "done"],"site_status": ["draft", "published", "paused"],"subscription_plan": ["free", "basic", "pro"],"version_kind": ["draft", "published"]
+            "industry": ["food", "beauty", "stay", "pro"],"inquiry_status": ["new", "doing", "done"],"site_status": ["draft", "published", "paused"],"site_tone": ["calm", "warm", "fresh"],"subscription_plan": ["free", "basic", "pro"],"version_kind": ["draft", "published"]
           }
         }
 } as const

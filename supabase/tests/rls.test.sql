@@ -4,11 +4,13 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(39);
 
--- 사용자 두 명 (트리거가 profiles를 만든다)
+-- 사용자 세 명 (트리거가 profiles를 만든다). 사이트는 한 사람당 하나라
+-- A는 공개된 사이트, C는 초안 사이트를 갖는다. B는 사이트가 없다.
 insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
 values
   ('11111111-1111-1111-1111-111111111111', 'a@example.com', '{"name":"가게주인A"}', '{"provider":"email"}'),
-  ('22222222-2222-2222-2222-222222222222', 'b@example.com', '{}', '{"provider":"kakao"}');
+  ('22222222-2222-2222-2222-222222222222', 'b@example.com', '{}', '{"provider":"kakao"}'),
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'c@example.com', '{}', '{"provider":"email"}');
 
 select results_eq(
   $$ select name, signup_source from public.profiles
@@ -21,7 +23,7 @@ select results_eq(
 insert into public.sites (id, owner_id, name, industry, slug, status)
 values
   ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'A 카페', 'food', 'a-cafe', 'published'),
-  ('aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'A 미용실', 'beauty', 'a-hair', 'draft');
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'C 미용실', 'beauty', 'c-hair', 'draft');
 
 insert into public.site_versions (site_id, kind)
 values
@@ -110,8 +112,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
 
 select is(
-  (select count(*) from public.sites where owner_id = '11111111-1111-1111-1111-111111111111')::int, 1,
-  'B는 A의 사이트 중 공개된 것만 본다'
+  (select count(*) from public.sites where id in (
+     'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'))::int, 1,
+  'B는 남의 사이트 중 공개된 것만 본다 (C의 초안 사이트는 안 보인다)'
 );
 
 select is(
@@ -184,8 +187,8 @@ select lives_ok(
 );
 
 select throws_ok(
-  $$ update public.sites set status = 'published'
-     where id = 'aaaaaaaa-0000-0000-0000-000000000002' $$,
+  $$ update public.sites set status = 'paused'
+     where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
   '42501', null, 'A는 사이트 공개 상태를 직접 바꿀 수 없다'
 );
 
@@ -202,11 +205,28 @@ select throws_ok(
 );
 
 -- site_versions: 소유자는 draft만 쓴다
+-- 버전이 아직 없는 사이트(C의 초안 사이트)로 만들기를 확인한다.
+select set_config('request.jwt.claims', '{"sub":"cccccccc-cccc-cccc-cccc-cccccccccccc","role":"authenticated"}', true);
+
 select lives_ok(
   $$ insert into public.site_versions (site_id, kind)
      values ('aaaaaaaa-0000-0000-0000-000000000002', 'draft') $$,
-  'A는 자기 사이트의 draft를 만들 수 있다'
+  'C는 자기 사이트의 draft를 만들 수 있다'
 );
+
+select throws_ok(
+  $$ insert into public.site_versions (site_id, kind)
+     values ('aaaaaaaa-0000-0000-0000-000000000002', 'published') $$,
+  '42501', null, 'C는 published 버전을 직접 만들 수 없다'
+);
+
+select throws_ok(
+  $$ update public.site_versions set kind = 'published'
+     where site_id = 'aaaaaaaa-0000-0000-0000-000000000002' and kind = 'draft' $$,
+  '42501', null, 'C는 draft를 published로 바꿀 수 없다'
+);
+
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
 select lives_ok(
   $$ update public.site_versions set sections = '[{"type":"hero"}]'
@@ -221,18 +241,6 @@ select is(
    where site_id = 'aaaaaaaa-0000-0000-0000-000000000001' and kind = 'published'),
   '[]'::jsonb,
   'A는 published 버전을 직접 수정할 수 없다'
-);
-
-select throws_ok(
-  $$ insert into public.site_versions (site_id, kind)
-     values ('aaaaaaaa-0000-0000-0000-000000000002', 'published') $$,
-  '42501', null, 'A는 published 버전을 직접 만들 수 없다'
-);
-
-select throws_ok(
-  $$ update public.site_versions set kind = 'published'
-     where site_id = 'aaaaaaaa-0000-0000-0000-000000000002' and kind = 'draft' $$,
-  '42501', null, 'A는 draft를 published로 바꿀 수 없다'
 );
 
 -- storage: 자기 사이트 폴더에만 올린다

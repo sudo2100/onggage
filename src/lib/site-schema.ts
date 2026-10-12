@@ -6,6 +6,9 @@ import { z } from "zod";
 
 export const industrySchema = z.enum(["food", "beauty", "stay", "pro"]);
 
+// 말투 (sites.tone). 템플릿 문구와 AI 문구가 따른다. DB enum site_tone과 같은 값.
+export const toneSchema = z.enum(["calm", "warm", "fresh"]);
+
 const requiredText = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) => z.string().trim().max(max);
 
@@ -187,6 +190,7 @@ export const siteContentSchema = z.object({
 });
 
 export type Industry = z.infer<typeof industrySchema>;
+export type Tone = z.infer<typeof toneSchema>;
 export type Section = z.infer<typeof sectionSchema>;
 export type SectionType = Section["type"];
 export type ListItem = z.infer<typeof listItemSchema>;
