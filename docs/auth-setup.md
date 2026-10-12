@@ -25,12 +25,12 @@
 4. 비밀번호 재설정 메일 등은 실제로 발송되지 않고 Mailpit(<http://127.0.0.1:54324>)에 쌓인다.
 5. 운영과 같은 인증 메일 흐름을 로컬에서 시험하려면 `enable_confirmations = true`로 바꾼다.
 
-> **`supabase/config.toml`을 바꾸면 `supabase stop` → `supabase start`로 다시 켜야 적용된다.** 실행 중인 Supabase는 시작할 때 읽은 설정(인증 메일, 소셜 로그인, 메일 양식, Redirect URL 등)을 그대로 쓴다. `supabase/.env`의 키를 바꿨을 때도 같다.
+> **`supabase/config.toml`을 바꾸면 `supabase stop` → `supabase start`로 다시 켜야 적용된다.** 실행 중인 Supabase는 시작할 때 읽은 설정(인증 메일, 소셜 로그인, 메일 양식, Redirect URL 등)을 그대로 쓴다. 프로젝트 루트 `.env`의 키를 바꿨을 때도 같다.
 
 ### 로컬에서 카카오·구글 켜기
 
 1. 아래 3·4장대로 앱을 만들 때 **Redirect URI에 `http://127.0.0.1:54321/auth/v1/callback`** 도 추가한다.
-2. `supabase/.env`(커밋 금지, `.gitignore`의 `.env*`에 걸림)에 키를 넣는다. 키 이름은 `.env.example`과 같다.
+2. **프로젝트 루트의 `.env`**(`supabase` 폴더 밖, 커밋 금지: `.gitignore`의 `.env*`에 걸림)에 키를 넣는다. Supabase CLI는 `config.toml`의 `env()` 값을 이 파일에서 읽는다(`supabase/.env`는 읽지 않음). 키 이름은 `.env.example`과 같아야 한다. 시크릿은 `_CLIENT_SECRET`이 아니라 `_SECRET`이다.
    ```
    SUPABASE_AUTH_EXTERNAL_KAKAO_CLIENT_ID=...
    SUPABASE_AUTH_EXTERNAL_KAKAO_SECRET=...

@@ -346,7 +346,7 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
-# 카카오·구글 로그인. 키는 supabase/.env 또는 셸 환경변수로 넣고 enabled = true로 바꾼다 (docs/auth-setup.md).
+# 카카오·구글 로그인. 키는 프로젝트 루트 .env 또는 셸 환경변수로 넣고 enabled = true로 바꾼다 (docs/auth-setup.md).
 [auth.external.kakao]
 enabled = false
 client_id = "env(SUPABASE_AUTH_EXTERNAL_KAKAO_CLIENT_ID)"
