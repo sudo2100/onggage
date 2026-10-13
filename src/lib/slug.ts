@@ -6,7 +6,8 @@ import type { Industry } from "./site-schema";
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 const MAX_SLUG_LENGTH = 30;
 
-// 마이그레이션 sites_slug_not_reserved와 같은 목록 (slug.test.ts가 마이그레이션과 같은지 확인한다).
+// 예약어의 기준은 DB 함수 public.reserved_slugs()다 (slug 제약과 publish_site가 함께 쓴다).
+// 화면의 예상 주소 안내에 쓰려고 같은 목록을 둔다. 가장 최근 마이그레이션의 목록과 같은지 slug.test.ts가 확인한다.
 export const RESERVED_SLUGS: readonly string[] = [
   "www", "api", "app", "mail", "smtp", "imap", "pop", "ftp", "cdn", "static", "assets",
   "img", "media", "files", "dev", "staging", "status", "ns1", "ns2",

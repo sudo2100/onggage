@@ -13,8 +13,8 @@ Claude Code에 한 번에 하나씩 붙여 넣어 쓰는 지시문입니다. 각
 | 3 | 디자인 8종과 섹션 컴포넌트 | 완료 | #4 |
 | 3-2 | 랜딩·디자인 목록·요금 안내 | 완료 | #5 |
 | 4 | 가입·로그인 | 완료 | #6 |
-| 5 | 온보딩 3단계와 사이트 생성 | 검토 대기 (`feat/onboarding`) | #7 |
-| 6 | 서브도메인 라우팅과 공개 페이지 | 대기 | |
+| 5 | 온보딩 3단계와 사이트 생성 | 완료 | #7 |
+| 6 | 서브도메인 라우팅과 공개 페이지 | 검토 대기 (`feat/public-site`) | |
 | 7 | 상태 확인 엔드포인트 | 대기 | |
 
 ## 작업 흐름
@@ -354,6 +354,24 @@ main에서 feat/public-site 브랜치를 만들어 작업해 줘. 계획 먼저 
 ```
 
 완료 기준: 온보딩 → 공개하기 → `{slug}.localhost:3000` 접속 시 사이트가 보이고, 페이지 소스에 본문 텍스트와 메타 태그가 들어 있다(서버 렌더링 확인). 공개 후 초안을 고쳐도 공개하기 전까지 공개 사이트는 바뀌지 않는다.
+
+진행 중 정한 것 (계획 승인 때 추가 요청 포함):
+- proxy 처리 순서: ① 서브도메인이면 `/sites/{slug}…`로 rewrite하고 끝(로그인 확인 없음, `/_next`·파비콘은 통과) ② 메인 도메인의 `/sites/{slug}`는 서브도메인으로 301 ③ 나머지는 세션 갱신·로그인 확인. 판단은 `src/lib/site-routing.ts`.
+- 공개 중지는 `status = draft`로 되돌리고, 공개 이력은 `sites.first_published_at`으로 구분한다. 공개한 적 있으면 주소를 바꿀 수 없다.
+- `publish_site(site_id, new_slug default null)` 하나로 주소 변경과 공개를 한 트랜잭션에서 처리한다(따로 `change_slug`를 두지 않음). `set_site_status`는 공개 중지·다시 공개만, `paused`는 주인이 바꾸거나 풀 수 없다.
+- 예약어는 DB 함수 `reserved_slugs()` 한 곳에서 관리하고, slug 제약·`publish_site`가 함께 쓴다. `slug.ts`의 목록이 가장 최근 마이그레이션의 목록과 같은지 단위 테스트가 확인한다.
+- 공개 페이지는 `getPublishedSite`(`use cache`, slug 태그, `cacheLife("hours")`)로 캐시한다. "없음" 결과에도 같은 태그가 달려 처음 공개할 때 지워진다. 공개하기·공개 중지 Server Action이 `updateTag`로 지운다.
+- 메인 robots.txt는 로그인 뒤 화면과 `/dev`를 막고 `/sites`는 막지 않는다(301을 따라가게). 메인 sitemap은 마케팅 화면만, 공개 사이트는 서브도메인마다 robots.txt·sitemap.xml을 둔다.
+- CLAUDE.md에 "권한이 필요한 서버 작업 규칙" 6가지를 추가했고, 편집실 화면·Server Action은 `requireSiteOwner()`로 시작한다.
+
+계획과 달라진 점:
+- **진짜 404 상태 코드**: Cache Components는 정적 껍데기를 먼저 보내 `notFound()`가 200(+noindex, soft 404)이 된다(운영 빌드에서 확인). 공개 페이지는 `ensureStatic = "navigation"`(ISR)로 바꿔 처음 요청 때 완성된 페이지를 만들어 보내게 했고(없는 주소 404, 이후 캐시 HIT), 편집실은 proxy가 로그인한 사용자의 사이트인지 먼저 확인해 아니면 404로 rewrite한다.
+- `allowedDevOrigins` 설정은 필요 없었다(개발 서버가 localhost 서브도메인을 기본 허용).
+- 개발 서버에서만 `www.localhost`의 301이 자기 자신으로 돌아간다(Next가 요청 주소를 localhost 기준으로 만들어 Location을 경로로 줄임). 운영 빌드에서는 메인 도메인으로 정상 이동한다.
+- 기존 `rls.test.sql`의 개수 검사가 DB 전체를 세고 있어, 로컬 DB에 E2E 사이트가 쌓이면 실패했다. 테스트가 만든 행만 세도록 고쳤다.
+- 나중에 요금 만료로 `paused`가 될 때(3단계 결제)는 그 사이트의 캐시 태그(`siteCacheTag(slug)`)를 `revalidateTag`로 지워야 한다. 빠뜨려도 캐시 수명(1시간) 안에 반영된다.
+
+확인 결과: lint·typecheck 통과, 단위 테스트 243개, DB 테스트(pgTAP) 105개, Playwright 71개(개발 서버) 통과. 운영 빌드(`next start`)에서도 공개 사이트·온보딩·로그인·마케팅 E2E를 돌려 공개 전 404 → 공개 → 본문, 변경 사항 반영, 공개 중지 404, 남의 편집실 404(HTTP 404)를 확인했다.
 
 ---
 

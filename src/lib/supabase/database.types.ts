@@ -81,14 +81,14 @@ isOneToOne: false
                   ]
                 },"sites": {
                   Row: {
-                    "created_at": string,"custom_domain": string | null,"id": string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id": string,"slug": string,"status": Database["public"]['Enums']["site_status"],"template_id": string | null,"tone": Database["public"]['Enums']["site_tone"],"updated_at": string
+                    "created_at": string,"custom_domain": string | null,"first_published_at": string | null,"id": string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id": string,"slug": string,"status": Database["public"]['Enums']["site_status"],"template_id": string | null,"tone": Database["public"]['Enums']["site_tone"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id"?: string,"slug": string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
+                    "created_at"?: string,"custom_domain"?: string | null,"first_published_at"?: string | null,"id"?: string,"industry": Database["public"]['Enums']["industry"],"name": string,"owner_id"?: string,"slug": string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"custom_domain"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"],"name"?: string,"owner_id"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
+                    "created_at"?: string,"custom_domain"?: string | null,"first_published_at"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"],"name"?: string,"owner_id"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["site_status"],"template_id"?: string | null,"tone"?: Database["public"]['Enums']["site_tone"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -133,8 +133,17 @@ isOneToOne: false
 "is_site_published":
 { Args: { "target_site_id": string }; Returns: boolean
                            },
+"publish_site":
+{ Args: { "new_slug"?: string,"target_site_id": string }; Returns: string
+                           },
 "record_signup_agreement":
 { Args: { "agreed_version": string }; Returns: undefined
+                           },
+"reserved_slugs":
+{ Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
+"set_site_status":
+{ Args: { "new_status": Database["public"]['Enums']["site_status"],"target_site_id": string }; Returns: undefined
                            }
           }
           Enums: {

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { previewSlug, RESERVED_SLUGS, romanizeHangul, SLUG_PATTERN, slugify, suggestSlug } from "./slug";
@@ -50,12 +50,29 @@ describe("slugify / suggestSlug", () => {
   });
 });
 
+// DB의 기준 목록: 가장 최근 마이그레이션에 정의된 public.reserved_slugs()
+function reservedSlugsFromMigrations(): string[] {
+  const dir = join(process.cwd(), "supabase/migrations");
+  const files = readdirSync(dir).filter((file) => file.endsWith(".sql")).sort();
+  let latest: string | undefined;
+  for (const file of files) {
+    const sql = readFileSync(join(dir, file), "utf8");
+    const match = /function public\.reserved_slugs\(\)[\s\S]*?array\[([\s\S]*?)\]::text\[\]/.exec(sql);
+    if (match) latest = match[1];
+  }
+  return [...(latest ?? "").matchAll(/'([a-z0-9-]+)'/g)].map((match) => match[1]);
+}
+
 describe("RESERVED_SLUGS", () => {
-  it("마이그레이션의 예약어 목록과 같다", () => {
-    const sql = readFileSync(join(process.cwd(), "supabase/migrations/20261011000000_init.sql"), "utf8");
-    const block = /sites_slug_not_reserved check \(slug <> all \(array\[([\s\S]*?)\]\)\)/.exec(sql)?.[1] ?? "";
-    const fromSql = [...block.matchAll(/'([a-z0-9-]+)'/g)].map((match) => match[1]);
-    expect(fromSql.length).toBeGreaterThan(10);
-    expect([...RESERVED_SLUGS].sort()).toEqual(fromSql.sort());
+  it("DB 기준 목록(reserved_slugs())과 같다", () => {
+    const fromDb = reservedSlugsFromMigrations();
+    expect(fromDb.length).toBeGreaterThan(10);
+    expect([...RESERVED_SLUGS].sort()).toEqual([...fromDb].sort());
+  });
+
+  it("꼭 막아야 하는 주소를 포함한다", () => {
+    for (const slug of ["www", "api", "admin", "app", "studio", "mail", "static", "assets"]) {
+      expect(RESERVED_SLUGS).toContain(slug);
+    }
   });
 });
