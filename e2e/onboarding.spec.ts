@@ -79,7 +79,8 @@ test("디자인 상세 → 가입 → 미리 채운 온보딩 → 이전·뒤로
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("결 헤어");
   await expect(page.locator("[data-site-address]")).toContainText("gyeol-heeo");
   await expect(page.getByText("모먼트 디자인 · 따뜻한 말투")).toBeVisible();
-  const preview = page.locator("[data-scaled-preview]");
+  // Next는 뒤로 가기에 대비해 직전 화면(/start)을 숨긴 채 DOM에 남겨 두므로, 편집실 미리보기 안에서만 찾는다.
+  const preview = page.getByRole("img", { name: /홈페이지 초안 미리보기/ });
   await expect(preview.getByText("031-922-5678").first()).toBeAttached();
   await expect(preview.getByText("편하게 이야기 나누며 찾는 나에게 맞는 스타일")).toBeAttached();
 

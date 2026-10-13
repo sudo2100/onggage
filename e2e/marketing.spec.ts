@@ -48,7 +48,8 @@ test("랜딩 → 디자인 목록 → 상세 → 시작하기까지 상호가 �
 test("업종 필터를 바꿔도 상호·업종 쿼리가 유지된다", async ({ page }) => {
   await page.goto("/designs?name=%EB%8B%B4%EC%86%8C&industry=food");
   await page.getByRole("navigation", { name: "업종 필터" }).getByRole("link", { name: "전체" }).click();
-  await expect(page).toHaveURL(/filter=all/);
+  // 병렬 실행 중 개발 서버가 이 화면을 처음 컴파일하면 5초를 넘길 때가 있다.
+  await expect(page).toHaveURL(/filter=all/, { timeout: 15_000 });
   await expect(page.locator("[data-design-card]")).toHaveCount(8);
   await expect(page.locator("[data-design-card]").first()).toHaveAttribute("data-design-card", "food-a");
   expect(new URL(page.url()).searchParams.get("name")).toBe("담소");
