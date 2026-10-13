@@ -14,6 +14,7 @@ export const DISALLOWED_PATHS = [
   "/reset-password",
   "/auth",
   "/dev",
+  "/api",
 ];
 
 export default function robots(): MetadataRoute.Robots {
