@@ -40,12 +40,26 @@ async function logIn(page: Page, email: string, path = "/login") {
 }
 
 // API로 직접 가입한 사용자 (가입 화면의 동의를 거치지 않음 → 동의 기록 없음)
+// 사이트도 API로 직접 만들어 둔다 (DB는 동의 기록을 보지 않으므로 만들어진다). 편집실 주소 확인용.
 async function createUserWithoutAgreement() {
   const email = uniqueEmail();
   const supabase = createClient(supabaseUrl!, anonKey!, { auth: { persistSession: false } });
   const { error } = await supabase.auth.signUp({ email, password: PASSWORD });
   if (error) throw error;
-  return email;
+  const { data, error: siteError } = await supabase
+    .rpc("create_site_with_draft", {
+      site_name: "동의 전 가게",
+      site_industry: "food",
+      site_template_id: "food-a",
+      site_tone: "calm",
+      slug_base: `no-agree-${Date.now().toString(36)}`,
+      draft_sections: [{ id: "hero", type: "hero", visible: true, title: "동의 전 가게", subtitle: "", ctaLabel: "문의" }],
+      draft_theme: { accent: "#7A4B1F", font: "myeongjo", layout: "split" },
+      draft_business: {},
+    })
+    .single<{ site_id: string }>();
+  if (siteError) throw siteError;
+  return { email, siteId: data.site_id };
 }
 
 test.describe("로그인 없이", () => {
@@ -133,12 +147,13 @@ test.describe("로그인 흐름", () => {
   });
 
   test("동의 기록이 없는 사용자가 /start, /studio에 가면 /signup/agree로 가고, 동의하면 돌아간다", async ({ page }) => {
-    const email = await createUserWithoutAgreement();
+    const { email, siteId } = await createUserWithoutAgreement();
     await logIn(page, email);
     await expect(page).toHaveURL("/signup/agree");
 
-    await page.goto("/studio/abc");
-    await expect(page).toHaveURL("/signup/agree?next=%2Fstudio%2Fabc");
+    // 자기 편집실도 동의 전에는 들어갈 수 없다 (남의 편집실·없는 주소는 proxy가 먼저 404).
+    await page.goto(`/studio/${siteId}`);
+    await expect(page).toHaveURL(`/signup/agree?next=%2Fstudio%2F${siteId}`);
     await page.goto("/start?design=food-a");
     await expect(page).toHaveURL("/signup/agree?next=%2Fstart%3Fdesign%3Dfood-a");
 

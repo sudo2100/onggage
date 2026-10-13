@@ -4,6 +4,7 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(39);
 
+-- 로컬 DB에는 E2E가 만든 사이트가 남아 있을 수 있어, 개수는 이 테스트가 만든 행으로만 센다.
 -- 사용자 세 명 (트리거가 profiles를 만든다). 사이트는 한 사람당 하나라
 -- A는 공개된 사이트, C는 초안 사이트를 갖는다. B는 사이트가 없다.
 insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
@@ -87,12 +88,12 @@ set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
 select is(
-  (select count(*) from public.sites)::int, 1,
+  (select count(*) from public.sites where id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'))::int, 1,
   '익명은 공개된 사이트만 본다'
 );
 
 select is(
-  (select count(*) from public.site_versions)::int, 1,
+  (select count(*) from public.site_versions where site_id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'))::int, 1,
   '익명은 published 버전만 본다'
 );
 
@@ -175,7 +176,7 @@ select is(
 );
 
 select is(
-  (select count(*) from public.site_versions)::int, 2,
+  (select count(*) from public.site_versions where site_id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'))::int, 2,
   'A는 자기 사이트의 draft와 published를 모두 본다'
 );
 
